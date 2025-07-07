@@ -1,3 +1,4 @@
+using CnpjScanner.Api.Models;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
@@ -12,9 +13,22 @@ public class AnalyzeController : ControllerBase
     }
 
     [HttpGet("all")]
-    public async Task<IActionResult> AnalyzeAll([FromQuery] string path)
+    public async Task<IActionResult> AnalyzeAll(string path, int pageNumber = 1, int pageSize = 10)
     {
         var results = await _analyzer.AnalyzeDirectoryAsync(path);
-        return Ok(results);
+        var pagedResults = results
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
+        
+        var paginated = new PaginatedResult<VariableMatch>
+        {
+            PageNumber = pageNumber,
+            PageSize = pageSize,
+            TotalCount = results.Count,
+            Items = pagedResults
+        };
+
+        return Ok(paginated);
     }
 }
