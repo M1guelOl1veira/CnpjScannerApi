@@ -12,7 +12,10 @@ public class VBNetAnalyzer
     public List<VariableMatch> AnalyzeDirectory(string rootPath)
     {
         var matches = new List<VariableMatch>();
-        var vbFiles = Directory.GetFiles(rootPath, "*.vb", SearchOption.AllDirectories);
+        var excludedDirs = new[] { "bin", "obj", ".git", ".vs", "packages" };
+        var vbFiles = Directory.GetFiles(rootPath, "*.vb", SearchOption.AllDirectories)
+            .Where(file => !excludedDirs.Any(ex => file.Split(Path.DirectorySeparatorChar).Contains(ex)))
+            .ToList();
 
         foreach (var file in vbFiles)
         {
