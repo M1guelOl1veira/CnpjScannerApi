@@ -45,6 +45,6 @@ public class MultiLanguageAnalyzerService
             });
         }
 
-        return result.ToList();
+        return result.OrderByDescending(x => x.LooksLikeCnpj).ToList();
     }
 }

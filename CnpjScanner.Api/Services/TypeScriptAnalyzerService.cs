@@ -9,13 +9,15 @@ public class TypeScriptAnalyzerService
         var psi = new ProcessStartInfo
         {
             FileName = "node",
-            Arguments = $"--max-old-space-size=512 ../TypescriptAnalyzer/dist/typescriptAnalyzer.js \"{codePath}\" --quiet",
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
             CreateNoWindow = true
         };
-
+        psi.ArgumentList.Add("--max-old-space-size=512");
+        psi.ArgumentList.Add("../TypescriptAnalyzer/dist/typescriptAnalyzer.js");
+        psi.ArgumentList.Add(codePath);
+        psi.ArgumentList.Add("--quiet");
         using var process = Process.Start(psi);
         Task<string> stdOutTask = process.StandardOutput.ReadToEndAsync();
         Task<string> stdErrTask = process.StandardError.ReadToEndAsync();
@@ -25,8 +27,7 @@ public class TypeScriptAnalyzerService
         string output = await stdOutTask;
         string error = await stdErrTask;
 
-        // ✅ Only throw if output is invalid (not if there are debug logs in stderr)
-        if (string.IsNullOrWhiteSpace(output) || output.Trim().StartsWith("A")) // <- could be adjusted
+        if (string.IsNullOrWhiteSpace(output) || output.Trim().StartsWith("A"))
         {
             throw new Exception($"TypeScript analyzer error: {error}");
         }
