@@ -2,6 +2,8 @@ Module Sample
     Const CNPJ_LENGTH As Integer = 14
     Dim companyCnpj = 12345678000190
     Dim unrelated = 123
+    Dim CNPJ As Object
+    Dim cnpj2 = "Company XYZ"
     Dim z As Integer
 
     Sub Register(taxId As Integer)

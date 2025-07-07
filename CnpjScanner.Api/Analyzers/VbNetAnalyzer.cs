@@ -53,14 +53,29 @@ public class VBNetAnalyzer
 
         public override void VisitVariableDeclarator(VariableDeclaratorSyntax node)
         {
-            var name = node.Names.FirstOrDefault()?.Identifier.Text;
-            if (string.IsNullOrEmpty(name)) return;
+            var nameSyntax = node.Names.FirstOrDefault();
+            if (nameSyntax is null) return;
 
-            var symbol = _model.GetDeclaredSymbol(node.Names.First());
-            if ((symbol is ILocalSymbol local && _types.Contains(local.Type.Name)) ||
-                (symbol is IFieldSymbol field && _types.Contains(field.Type.Name)))
+            var symbol = _model.GetDeclaredSymbol(nameSyntax);
+            if (symbol is not ILocalSymbol local) return;
+
+            // If type is known and numeric
+            if (_types.Contains(local.Type.Name))
             {
                 AddMatch(symbol, node.GetLocation(), node.ToFullString());
+                return;
+            }
+
+            // Handle "Object"-typed inference
+            if (local.Type.Name == "Object" && node.Initializer?.Value is ExpressionSyntax expr)
+            {
+                var exprTypeInfo = _model.GetTypeInfo(expr);
+                var inferredTypeName = exprTypeInfo.Type?.Name;
+
+                if (_types.Contains(inferredTypeName!))
+                {
+                    AddMatch(symbol, node.GetLocation(), node.ToFullString());
+                }
             }
         }
 
