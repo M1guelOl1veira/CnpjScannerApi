@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CnpjScanner.Api", "CnpjScanner.Api\CnpjScanner.Api.csproj", "{60FAB8F7-84CA-4C80-A97D-E6DA67905B37}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CnpjScanner.Tests", "CnpjScanner.Tests\CnpjScanner.Tests.csproj", "{EA557008-203B-4556-B4AC-59BC023558FB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{60FAB8F7-84CA-4C80-A97D-E6DA67905B37}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{60FAB8F7-84CA-4C80-A97D-E6DA67905B37}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{60FAB8F7-84CA-4C80-A97D-E6DA67905B37}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{60FAB8F7-84CA-4C80-A97D-E6DA67905B37}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EA557008-203B-4556-B4AC-59BC023558FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EA557008-203B-4556-B4AC-59BC023558FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EA557008-203B-4556-B4AC-59BC023558FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EA557008-203B-4556-B4AC-59BC023558FB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
