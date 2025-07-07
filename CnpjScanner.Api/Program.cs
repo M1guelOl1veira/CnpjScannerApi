@@ -1,15 +1,10 @@
-using CnpjScanner.Api.Analyzers;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<CSharpAnalyzer>();
-builder.Services.AddScoped<VbNetAnalyzer>();
+builder.Services.AddScoped<VBNetAnalyzer>();
 builder.Services.AddScoped<TypeScriptAnalyzerService>();
 builder.Services.AddScoped<MultiLanguageAnalyzerService>();
 builder.Services.AddScoped<CSharpAnalyzer>();

@@ -1,14 +1,12 @@
-using CnpjScanner.Api.Analyzers;
-
 public class MultiLanguageAnalyzerService
 {
     private readonly CSharpAnalyzer _csharp;
-    private readonly VbNetAnalyzer _vbnet;
+    private readonly VBNetAnalyzer _vbnet;
     private readonly TypeScriptAnalyzerService _typescript;
 
     public MultiLanguageAnalyzerService(
         CSharpAnalyzer csharp,
-        VbNetAnalyzer vbnet,
+        VBNetAnalyzer vbnet,
         TypeScriptAnalyzerService typescript)
     {
         _csharp = csharp;
@@ -23,27 +21,27 @@ public class MultiLanguageAnalyzerService
         if (!Directory.Exists(directoryPath))
             return result;
 
-        var csharpResults = _csharp.AnalyzeCSharpFiles(directoryPath)
-            .Select(r => { r.Language = "C#"; return r; });
-        result.AddRange(csharpResults);
+        // var csharpResults = _csharp.AnalyzeCSharpFiles(directoryPath)
+        //     .Select(r => { r.Language = "C#"; return r; });
+        // result.AddRange(csharpResults);
 
-        // var vbnetResults = _vbnet.AnalyzeVbNetFiles(directoryPath)
-        //     .Select(r => { r.Language = "VB.NET"; return r; });
-        // result.AddRange(vbnetResults);
+        var vbnetResults = _vbnet.AnalyzeDirectory(directoryPath)
+            .Select(r => { r.Language = "VB.NET"; return r; });
+        result.AddRange(vbnetResults);
 
-        var tsResults = await _typescript.AnalyzeAsync(directoryPath);
-        foreach (var tsMatch in tsResults)
-        {
-            result.Add(new VariableMatch
-            {
-                FilePath = tsMatch.FilePath,
-                LineNumber = tsMatch.LineNumber,
-                Declaration = tsMatch.Declaration,
-                LooksLikeCnpj = tsMatch.LooksLikeCnpj,
-                Language = "TypeScript",
-                Type = "number"
-            });
-        }
+        // var tsResults = await _typescript.AnalyzeAsync(directoryPath);
+        // foreach (var tsMatch in tsResults)
+        // {
+        //     result.Add(new VariableMatch
+        //     {
+        //         FilePath = tsMatch.FilePath,
+        //         LineNumber = tsMatch.LineNumber,
+        //         Declaration = tsMatch.Declaration,
+        //         LooksLikeCnpj = tsMatch.LooksLikeCnpj,
+        //         Language = "TypeScript",
+        //         Type = "number"
+        //     });
+        // }
 
         return result.OrderByDescending(x => x.LooksLikeCnpj).ToList();
     }
