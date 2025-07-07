@@ -14,35 +14,40 @@ public class MultiLanguageAnalyzerService
         _typescript = typescript;
     }
 
-    public async Task<List<VariableMatch>> AnalyzeDirectoryAsync(string directoryPath)
+    public async Task<List<VariableMatch>> AnalyzeDirectoryAsync(string directoryPath, string[] extensions)
     {
-        var result = new List<VariableMatch>();
 
-        if (!Directory.Exists(directoryPath))
-            return result;
+        var allMatches = new List<VariableMatch>();
+        var tasks = new List<Task<List<VariableMatch>>>();
 
-        var csharpResults = _csharp.AnalyzeCSharpFiles(directoryPath)
-            .Select(r => { r.Language = "C#"; return r; });
-        result.AddRange(csharpResults);
+        if (extensions.Contains("cs"))
+            tasks.Add(_csharp.AnalyzeCSharpFilesAsync(directoryPath));
 
-        var vbnetResults = _vbnet.AnalyzeDirectory(directoryPath)
-            .Select(r => { r.Language = "VB.NET"; return r; });
-        result.AddRange(vbnetResults);
+        if (extensions.Contains("ts"))
+            tasks.Add(AnalyzeAsVariableMatchesAsync(directoryPath));
 
-        var tsResults = await _typescript.AnalyzeAsync(directoryPath);
-        foreach (var tsMatch in tsResults)
-        {
-            result.Add(new VariableMatch
-            {
-                FilePath = tsMatch.FilePath,
-                LineNumber = tsMatch.LineNumber,
-                Declaration = tsMatch.Declaration,
-                LooksLikeCnpj = tsMatch.LooksLikeCnpj,
-                Language = "TypeScript",
-                Type = "number"
-            });
-        }
+        if (extensions.Contains("vb"))
+            tasks.Add(_vbnet.AnalyzeDirectoryAsync(directoryPath));
 
-        return result.OrderByDescending(x => x.LooksLikeCnpj).ToList();
+        var results = await Task.WhenAll(tasks);
+        foreach (var result in results)
+            allMatches.AddRange(result);
+
+        return allMatches.OrderByDescending(x => x.LooksLikeCnpj).ToList();
     }
+    public async Task<List<VariableMatch>> AnalyzeAsVariableMatchesAsync(string codePath)
+{
+    var tsResults = await _typescript.AnalyzeAsync(codePath);
+    return tsResults.Select(match => new VariableMatch
+    {
+        FilePath = match.FilePath,
+        LineNumber = match.LineNumber,
+        Declaration = match.Declaration,
+        LooksLikeCnpj = match.LooksLikeCnpj,
+        Language = "TypeScript",
+        Type = "number"
+    }).ToList();
 }
+}
+
+

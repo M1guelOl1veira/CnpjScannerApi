@@ -8,12 +8,19 @@ public class CSharpAnalyzer
 {
     private static readonly Regex CnpjRegex = new(@"\d{2}\.??\d{3}\.??\d{3}/??\d{4}-??\d{2}", RegexOptions.Compiled);
     private static readonly string[] CnpjKeywords = new[] { "cnpj", "tax" };
-    public List<VariableMatch> AnalyzeCSharpFiles(string rootPath)
+
+    public async Task<List<VariableMatch>> AnalyzeCSharpFilesAsync(string rootPath)
     {
         var matches = new List<VariableMatch>();
         var files = Directory.GetFiles(rootPath, "*.cs", SearchOption.AllDirectories);
+        var language = "C#";
 
-        var syntaxTrees = files.Select(file => CSharpSyntaxTree.ParseText(File.ReadAllText(file), path: file)).ToList();
+        var syntaxTrees = new List<SyntaxTree>();
+        foreach (var file in files)
+        {
+            var code = await File.ReadAllTextAsync(file);
+            syntaxTrees.Add(CSharpSyntaxTree.ParseText(code, path: file));
+        }
 
         var references = new List<MetadataReference>
         {
@@ -28,7 +35,7 @@ public class CSharpAnalyzer
 
         foreach (var tree in syntaxTrees)
         {
-            var root = tree.GetRoot();
+            var root = await tree.GetRootAsync();
             var model = compilation.GetSemanticModel(tree);
 
             var declarations = root.DescendantNodes().OfType<VariableDeclarationSyntax>();
@@ -56,7 +63,8 @@ public class CSharpAnalyzer
                             LineNumber = line,
                             LooksLikeCnpj = looksLikeCnpj,
                             Declaration = declarationText,
-                            Type = inferredType
+                            Type = inferredType,
+                            Language = language
                         });
                     }
                 }
@@ -91,7 +99,8 @@ public class CSharpAnalyzer
                                 LineNumber = line,
                                 LooksLikeCnpj = looksLikeCnpj,
                                 Declaration = declarationText,
-                                Type = "<for loop>"
+                                Type = "<for loop>",
+                                Language = language
                             });
                         }
                     }
@@ -112,7 +121,8 @@ public class CSharpAnalyzer
                         LineNumber = foreachStatement.GetLocation().GetLineSpan().StartLinePosition.Line + 1,
                         LooksLikeCnpj = looksLikeCnpj,
                         Declaration = foreachStatement.ToFullString().Trim(),
-                        Type = "<for each>"
+                        Type = "<for each>",
+                        Language = language
                     });
                 }
             }
@@ -135,7 +145,8 @@ public class CSharpAnalyzer
                         LineNumber = line,
                         LooksLikeCnpj = looksLikeCnpj,
                         Declaration = propertyCode,
-                        Type = inferredType
+                        Type = inferredType,
+                        Language = language
                     });
                 }
             }

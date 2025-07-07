@@ -12,10 +12,10 @@ public class AnalyzeController : ControllerBase
         _analyzer = analyzer;
     }
 
-    [HttpGet("all")]
-    public async Task<IActionResult> AnalyzeAll(string path, int pageNumber = 1, int pageSize = 10)
+    [HttpPost("all")]
+    public async Task<IActionResult> AnalyzeAll(string[] extensions, string path, int pageNumber = 1, int pageSize = 10)
     {
-        var results = await _analyzer.AnalyzeDirectoryAsync(path);
+        var results = await _analyzer.AnalyzeDirectoryAsync(path, extensions);
         var pagedResults = results
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)

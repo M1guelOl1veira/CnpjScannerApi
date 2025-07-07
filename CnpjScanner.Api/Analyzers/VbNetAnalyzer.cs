@@ -1,7 +1,6 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.VisualBasic;
 using Microsoft.CodeAnalysis.VisualBasic.Syntax;
-using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 
 public class VBNetAnalyzer
@@ -9,7 +8,7 @@ public class VBNetAnalyzer
     private static readonly Regex CnpjRegex = new(@"\d{2}\.??\d{3}\.??\d{3}/??\d{4}-??\d{2}", RegexOptions.Compiled);
     private static readonly string[] Keywords = ["cnpj", "tax"];
 
-    public List<VariableMatch> AnalyzeDirectory(string rootPath)
+    public async Task<List<VariableMatch>> AnalyzeDirectoryAsync(string rootPath)
     {
         var matches = new List<VariableMatch>();
         var excludedDirs = new[] { "bin", "obj", ".git", ".vs", "packages" };
@@ -19,9 +18,9 @@ public class VBNetAnalyzer
 
         foreach (var file in vbFiles)
         {
-            var code = File.ReadAllText(file);
+            var code = await File.ReadAllTextAsync(file);
             var tree = VisualBasicSyntaxTree.ParseText(code);
-            var root = tree.GetCompilationUnitRoot();
+            var root = await tree.GetRootAsync();
 
             var compilation = VisualBasicCompilation.Create("VBAnalysis")
                 .AddSyntaxTrees(tree)
@@ -59,14 +58,12 @@ public class VBNetAnalyzer
             var symbol = _model.GetDeclaredSymbol(nameSyntax);
             if (symbol is not ILocalSymbol local) return;
 
-            // If type is known and numeric
             if (_types.Contains(local.Type.Name))
             {
                 AddMatch(symbol, node.GetLocation(), node.ToFullString());
                 return;
             }
 
-            // Handle "Object"-typed inference
             if (local.Type.Name == "Object" && node.Initializer?.Value is ExpressionSyntax expr)
             {
                 var exprTypeInfo = _model.GetTypeInfo(expr);
@@ -82,7 +79,7 @@ public class VBNetAnalyzer
         public override void VisitPropertyStatement(PropertyStatementSyntax node)
         {
             var symbol = _model.GetDeclaredSymbol(node);
-            if (symbol is IPropertySymbol prop &&  _types.Contains(prop.Type.Name))
+            if (symbol is IPropertySymbol prop && _types.Contains(prop.Type.Name))
             {
                 AddMatch(symbol, node.GetLocation(), node.ToFullString());
             }
@@ -99,6 +96,7 @@ public class VBNetAnalyzer
 
         private void AddMatch(ISymbol symbol, Location location, string declaration)
         {
+            var language = "VB.NET";
             var name = symbol.Name.ToLower();
             if (name == "cp") return;
             var lineNumber = location.GetLineSpan().StartLinePosition.Line + 1;
@@ -119,7 +117,8 @@ public class VBNetAnalyzer
                 LineNumber = lineNumber,
                 Declaration = declaration.Trim(),
                 LooksLikeCnpj = looksLikeCnpj,
-                Type = typeName
+                Type = typeName,
+                Language = language
             });
         }
     }
