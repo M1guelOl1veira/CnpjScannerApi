@@ -100,6 +100,7 @@ public class VBNetAnalyzer
         private void AddMatch(ISymbol symbol, Location location, string declaration)
         {
             var name = symbol.Name.ToLower();
+            if (name == "cp") return;
             var lineNumber = location.GetLineSpan().StartLinePosition.Line + 1;
             var looksLikeCnpj = Keywords.Any(k => name.Contains(k)) || CnpjRegex.IsMatch(declaration);
 
