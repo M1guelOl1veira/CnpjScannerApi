@@ -16,7 +16,8 @@ public class MultiLanguageAnalyzerService
 
     public async Task<List<VariableMatch>> AnalyzeDirectoryAsync(string directoryPath, string[] extensions)
     {
-
+        if (extensions.Count() == 0)
+            extensions = ["cs", "vb", "ts"];
         var allMatches = new List<VariableMatch>();
         var tasks = new List<Task<List<VariableMatch>>>();
 
