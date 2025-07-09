@@ -14,7 +14,7 @@ namespace CnpjScanner.Api.Services
 
         public async Task<List<VariableMatch>> AnalyzeDirectoryAsync(string directoryPath, string[] extensions)
         {
-            if (extensions.Count() == 0)
+            if (extensions == null || extensions.Length == 0)
                 extensions = ["cs", "vb", "ts"];
             var allMatches = new List<VariableMatch>();
             var tasks = new List<Task<List<VariableMatch>>>();
