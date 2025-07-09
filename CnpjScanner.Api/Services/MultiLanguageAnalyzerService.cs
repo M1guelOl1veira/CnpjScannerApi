@@ -37,18 +37,18 @@ public class MultiLanguageAnalyzerService
         return allMatches.OrderByDescending(x => x.LooksLikeCnpj).ToList();
     }
     public async Task<List<VariableMatch>> AnalyzeAsVariableMatchesAsync(string codePath)
-{
-    var tsResults = await _typescript.AnalyzeAsync(codePath);
-    return tsResults.Select(match => new VariableMatch
     {
-        FilePath = match.FilePath,
-        LineNumber = match.LineNumber,
-        Declaration = match.Declaration,
-        LooksLikeCnpj = match.LooksLikeCnpj,
-        Language = "TypeScript",
-        Type = "number"
-    }).ToList();
-}
+        var tsResults = await _typescript.AnalyzeAsync(codePath);
+        return tsResults.Select(match => new VariableMatch
+        {
+            FilePath = match.FilePath,
+            LineNumber = match.LineNumber,
+            Declaration = match.Declaration,
+            LooksLikeCnpj = match.LooksLikeCnpj,
+            Language = "TypeScript",
+            Type = "number"
+        }).ToList();
+    }
 }
 
 

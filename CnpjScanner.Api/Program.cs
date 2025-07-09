@@ -1,3 +1,6 @@
+using CnpjScanner.Api.Interfaces;
+using CnpjScanner.Api.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
@@ -6,6 +9,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<CSharpAnalyzer>();
 builder.Services.AddScoped<VBNetAnalyzer>();
 builder.Services.AddScoped<TypeScriptAnalyzerService>();
+builder.Services.AddScoped<IGitService, GitService>();
 builder.Services.AddScoped<MultiLanguageAnalyzerService>();
 builder.Services.AddScoped<CSharpAnalyzer>();
 
