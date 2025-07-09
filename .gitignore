@@ -28,6 +28,8 @@ obj/
 *.vs/
 *.suo
 
+appsettings.Development.json
+
 # Build artifacts
 CnpjScanner.Api/wwwroot/
 CnpjScanner.Api/bin/

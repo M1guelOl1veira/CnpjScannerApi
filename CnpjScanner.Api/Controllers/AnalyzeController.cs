@@ -1,71 +1,65 @@
 using CnpjScanner.Api.Interfaces;
 using CnpjScanner.Api.Models;
+using CnpjScanner.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 
-[ApiController]
-[Route("api/analyze")]
-public class AnalyzeController : ControllerBase
+namespace CnpjScanner.Api.Controllers
 {
-    private readonly MultiLanguageAnalyzerService _analyzer;
-    private readonly IGitService _gitService;
-
-    public AnalyzeController(MultiLanguageAnalyzerService analyzer, IGitService gitService)
+    [ApiController]
+    [Route("api/analyze")]
+    public class AnalyzeController(MultiLanguageAnalyzerService analyzer, IGitService gitService) : ControllerBase
     {
-        _analyzer = analyzer;
-        _gitService = gitService;
-    }
+        private readonly MultiLanguageAnalyzerService _analyzer = analyzer;
+        private readonly IGitService _gitService = gitService;
 
-    [HttpPost("all")]
-    public async Task<IActionResult> AnalyzeAll([FromBody] RepoRequest request)
-    {
-        string repoPath = "";
-        try
+        [HttpGet("repo")]
+        public async Task<IActionResult> AnalyzeAll([FromQuery]RepoRequest request)
         {
-            repoPath = await _gitService.CloneRepoAsync(request);
-            var results = await _analyzer.AnalyzeDirectoryAsync(repoPath, request.Extensions!);
-            var pagedResults = results
-                .Skip((request.PageNumber - 1) * request.PageSize)
-                .Take(request.PageSize)
-                .ToList();
-
-            var paginated = new PaginatedResult<VariableMatch>
+            string repoPath = "";
+            try
             {
-                PageNumber = request.PageNumber,
-                PageSize = request.PageSize,
-                TotalCount = results.Count,
-                Items = pagedResults
-            };
+                repoPath = await _gitService.CloneRepoAsync(request);
+                var results = await _analyzer.AnalyzeDirectoryAsync(repoPath, request.Extensions!);
+                var pagedResults = results
+                    .Skip((request.PageNumber - 1) * request.PageSize)
+                    .Take(request.PageSize)
+                    .ToList();
 
-            return Ok(paginated);
-        }
-        catch (System.Exception)
-        {
-            throw;
-        }
-        finally
-        {
-            TryForceDelete(repoPath);
-        }
-    }
-    
-    private void TryForceDelete(string path)
-    {
-        try
-        {
-            if (!Directory.Exists(path)) return;
+                var paginated = new PaginatedResult<VariableMatch>
+                {
+                    PageNumber = request.PageNumber,
+                    PageSize = request.PageSize,
+                    TotalCount = results.Count,
+                    Items = pagedResults
+                };
 
-            foreach (var file in Directory.GetFiles(path, "*", SearchOption.AllDirectories))
-            {
-                try { System.IO.File.SetAttributes(file, FileAttributes.Normal); }
-                catch { /* ignore locked file */ }
+                return Ok(paginated);
             }
-
-            Directory.Delete(path, true);
+            finally
+            {
+                TryForceDelete(repoPath);
+            }
         }
-        catch (Exception ex)
+
+        private static void TryForceDelete(string path)
         {
-            // Optionally log error
-            Console.WriteLine($"Failed to delete temp repo: {ex.Message}");
+            try
+            {
+                if (!Directory.Exists(path)) return;
+
+                foreach (var file in Directory.GetFiles(path, "*", SearchOption.AllDirectories))
+                {
+                    try { System.IO.File.SetAttributes(file, FileAttributes.Normal); }
+                    catch { /* ignore locked file */ }
+                }
+
+                Directory.Delete(path, true);
+            }
+            catch (Exception ex)
+            {
+                // Optionally log error
+                Console.WriteLine($"Failed to delete temp repo: {ex.Message}");
+            }
         }
     }
 }

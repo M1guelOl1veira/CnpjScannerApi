@@ -1,3 +1,4 @@
+using CnpjScanner.Api.Analyzers;
 using CnpjScanner.Api.Interfaces;
 using CnpjScanner.Api.Services;
 

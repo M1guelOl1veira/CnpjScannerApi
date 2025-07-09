@@ -1,49 +1,53 @@
 // Services/TypeScriptAnalyzerService.cs
 using System.Diagnostics;
 using System.Text.Json;
+using CnpjScanner.Api.Models;
 
-public class TypeScriptAnalyzerService
+namespace CnpjScanner.Api.Services
 {
-    public async Task<List<VariableMatch>> AnalyzeAsync(string codePath)
+    public class TypeScriptAnalyzerService
     {
-        var psi = new ProcessStartInfo
+        public async Task<List<VariableMatch>> AnalyzeAsync(string codePath)
         {
-            FileName = "node",
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true
-        };
-        psi.ArgumentList.Add("--max-old-space-size=512");
-        psi.ArgumentList.Add("../TypescriptAnalyzer/dist/typescriptAnalyzer.js");
-        psi.ArgumentList.Add(codePath);
-        psi.ArgumentList.Add("--quiet");
-        using var process = Process.Start(psi);
-        Task<string> stdOutTask = process.StandardOutput.ReadToEndAsync();
-        Task<string> stdErrTask = process.StandardError.ReadToEndAsync();
-
-        await process.WaitForExitAsync();
-
-        string output = await stdOutTask;
-        string error = await stdErrTask;
-
-        if (string.IsNullOrWhiteSpace(output) || output.Trim().StartsWith("A"))
-        {
-            throw new Exception($"TypeScript analyzer error: {error}");
-        }
-
-        try
-        {
-            var result = JsonSerializer.Deserialize<List<VariableMatch>>(output, new JsonSerializerOptions
+            var psi = new ProcessStartInfo
             {
-                PropertyNameCaseInsensitive = true
-            }) ?? new List<VariableMatch>();
+                FileName = "node",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+            psi.ArgumentList.Add("--max-old-space-size=512");
+            psi.ArgumentList.Add("../TypescriptAnalyzer/dist/typescriptAnalyzer.js");
+            psi.ArgumentList.Add(codePath);
+            psi.ArgumentList.Add("--quiet");
+            using var process = Process.Start(psi);
+            Task<string> stdOutTask = process.StandardOutput.ReadToEndAsync();
+            Task<string> stdErrTask = process.StandardError.ReadToEndAsync();
 
-            return result;
-        }
-        catch (JsonException ex)
-        {
-            throw new Exception($"Failed to parse analyzer output. Output: {output}", ex);
+            await process.WaitForExitAsync();
+
+            string output = await stdOutTask;
+            string error = await stdErrTask;
+
+            if (string.IsNullOrWhiteSpace(output) || output.Trim().StartsWith("A"))
+            {
+                throw new Exception($"TypeScript analyzer error: {error}");
+            }
+
+            try
+            {
+                var result = JsonSerializer.Deserialize<List<VariableMatch>>(output, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                }) ?? new List<VariableMatch>();
+
+                return result;
+            }
+            catch (JsonException ex)
+            {
+                throw new Exception($"Failed to parse analyzer output. Output: {output}", ex);
+            }
         }
     }
 }

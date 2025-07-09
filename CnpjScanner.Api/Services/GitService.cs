@@ -5,8 +5,10 @@ using LibGit2Sharp.Handlers;
 
 namespace CnpjScanner.Api.Services
 {
-    public class GitService : IGitService
+    public class GitService(IConfiguration configuration) : IGitService
     {
+        private readonly IConfiguration configuration = configuration;
+
         public async Task<string> CloneRepoAsync(RepoRequest request)
         {
             var repoName = Path.GetFileNameWithoutExtension(request.RepoUrl);
@@ -14,15 +16,12 @@ namespace CnpjScanner.Api.Services
 
             var options = new CloneOptions();
 
-            if (!string.IsNullOrEmpty(request.Token))
-            {
-                options.FetchOptions.CredentialsProvider = (_url, _user, _cred) =>
-                    new UsernamePasswordCredentials
-                    {
-                        Username = request.Username ?? "git",
-                        Password = request.Token
-                    };
-            }
+            options.FetchOptions.CredentialsProvider = (_url, _user, _cred) =>
+                new UsernamePasswordCredentials
+                {
+                    Username = "git",   
+                    Password = configuration["Git:Token"]
+                };
 
             await Task.Run(() => Repository.Clone(request.RepoUrl, localPath, options));
 
