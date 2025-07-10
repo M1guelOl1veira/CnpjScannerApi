@@ -12,10 +12,9 @@ namespace CnpjScanner.Api.Services
         public async Task<string> CloneRepoAsync(RepoRequest request)
         {
             var repoName = Path.GetFileNameWithoutExtension(request.RepoUrl);
-            var localPath = Path.Combine(Path.GetTempPath(), "CnpjRepoCache", repoName);
+            var localPath = Path.Combine(request.DirToClone, repoName);
             if (!Directory.Exists(localPath))
             {
-                localPath = Path.Combine(Path.GetTempPath(), "CnpjRepoCache", repoName);
                 var options = new CloneOptions();
 
                 options.FetchOptions.CredentialsProvider = (_url, _user, _cred) =>

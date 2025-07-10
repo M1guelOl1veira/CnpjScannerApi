@@ -1,44 +1,101 @@
-<div class="container mt-4">
-      <h2 class="mb-4">CNPJ Scanner</h2>
+<div class="container">
+  <div
+    class="d-flex justify-content-center align-items-center min-vh-100"
+    *ngIf="!analyzed"
+  >
+    <div class="card p-4 shadow" style="width: 100%; max-width: 500px">
+      <h4 class="text-center mb-3">CNPJ Scanner</h4>
 
-      <form (submit)="onSubmit($event)" class="mb-4">
-        <div class="input-group">
-          <input type="text" class="form-control" placeholder="Enter GitHub repository URL"
-                 [(ngModel)]="repoUrl" name="repoUrl" required>
-          <button type="submit" class="btn btn-primary">Analyze</button>
+      <form (submit)="onSubmit($event)">
+        <div class="mb-3">
+          <label for="repoUrl" class="form-label">Repositório</label>
+          <input
+            type="text"
+            id="repoUrl"
+            class="form-control"
+            placeholder="hdi-sistemas/br-sns-petregulacao"
+            [(ngModel)]="repoUrl"
+            name="repoUrl"
+            required
+          />
+        </div>
+
+        <div class="mb-3">
+          <label for="dirToClone" class="form-label">Diretório</label>
+          <input
+            type="text"
+            id="directory"
+            class="form-control"
+            placeholder="D://Workspace"
+            [(ngModel)]="dirToClone"
+            name="dirToClone"
+            required
+          />
+        </div>
+
+        <div class="mb-3" d-flex>
+          <div>
+            <label class="form-label">Exntensões</label>
+          </div>
+          <div
+            class="form-check form-check-inline"
+            *ngFor="let option of languageOptions"
+          >
+            <input
+              class="form-check-input"
+              type="checkbox"
+              [value]="option.value"
+              (change)="onCheckboxChange($event)"
+              [checked]="selectedLanguages.includes(option.value)"
+              id="lang-{{ option.value }}"
+            />
+            <label class="form-check-label" [for]="'lang-' + option.value">
+              {{ option.label }}
+            </label>
+          </div>
+        </div>
+        <div class="d-grid">
+          <button type="submit" class="btn btn-primary">Analisar</button>
         </div>
       </form>
-
-      <div *ngIf="results.items.length">
-        <table class="table table-bordered table-striped">
-          <thead class="table-dark">
-            <tr>
-              <th>File Path</th>
-              <th>Line</th>
-              <th>Type</th>
-              <th>Declaration</th>
-              <th>Looks Like CNPJ</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let match of results.items">
-              <td>{{ match.filePath }}</td>
-              <td>{{ match.lineNumber }}</td>
-              <td>{{ match.type }}</td>
-              <td><code>{{ match.declaration }}</code></td>
-              <td>{{ match.looksLikeCnpj }}</td>
-            </tr>
-          </tbody>
-        </table>
-
-        <ngb-pagination
-          [collectionSize]="results.totalCount"
-          [(page)]="results.pageNumber"
-          [pageSize]="results.pageSize"
-          [boundaryLinks]="true"
-          (pageChange)="loadPage($event)"
-        />
-      </div>
-
-      <div *ngIf="!results.items.length && analyzed">No matches found.</div>
     </div>
+  </div>
+
+  <div class="mt-4" *ngIf="analyzed">
+    <button type="submit" class="btn btn-primary" (click)="goBack()">
+      Voltar
+    </button>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Caminho do Arquivo</th>
+          <th>Linha</th>
+          <th>Tipagem</th>
+          <th>Declaração</th>
+          <th>CNPJ?</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let match of results.items">
+          <td>{{ match.filePath }}</td>
+          <td>{{ match.lineNumber }}</td>
+          <td>{{ match.type }}</td>
+          <td>
+            <code>{{ match.declaration }}</code>
+          </td>
+          <td>{{ match.looksLikeCnpj ? "✅" : "❌" }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <ngb-pagination
+      [collectionSize]="results.totalCount"
+      [(page)]="results.pageNumber"
+      [pageSize]="results.pageSize"
+      [boundaryLinks]="true"
+      (pageChange)="loadPage($event)"
+    />
+  </div>
+
+  <div *ngIf="!results.items.length && analyzed">No matches found.</div>
+</div>
