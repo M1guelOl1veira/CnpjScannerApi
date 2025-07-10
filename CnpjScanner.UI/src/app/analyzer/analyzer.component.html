@@ -1,0 +1,44 @@
+<div class="container mt-4">
+      <h2 class="mb-4">CNPJ Scanner</h2>
+
+      <form (submit)="onSubmit($event)" class="mb-4">
+        <div class="input-group">
+          <input type="text" class="form-control" placeholder="Enter GitHub repository URL"
+                 [(ngModel)]="repoUrl" name="repoUrl" required>
+          <button type="submit" class="btn btn-primary">Analyze</button>
+        </div>
+      </form>
+
+      <div *ngIf="results.items.length">
+        <table class="table table-bordered table-striped">
+          <thead class="table-dark">
+            <tr>
+              <th>File Path</th>
+              <th>Line</th>
+              <th>Type</th>
+              <th>Declaration</th>
+              <th>Looks Like CNPJ</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let match of results.items">
+              <td>{{ match.filePath }}</td>
+              <td>{{ match.lineNumber }}</td>
+              <td>{{ match.type }}</td>
+              <td><code>{{ match.declaration }}</code></td>
+              <td>{{ match.looksLikeCnpj }}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <ngb-pagination
+          [collectionSize]="results.totalCount"
+          [(page)]="results.pageNumber"
+          [pageSize]="results.pageSize"
+          [boundaryLinks]="true"
+          (pageChange)="loadPage($event)"
+        />
+      </div>
+
+      <div *ngIf="!results.items.length && analyzed">No matches found.</div>
+    </div>

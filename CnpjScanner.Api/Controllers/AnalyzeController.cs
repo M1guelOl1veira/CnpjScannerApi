@@ -11,34 +11,34 @@ namespace CnpjScanner.Api.Controllers
     {
         private readonly MultiLanguageAnalyzerService _analyzer = analyzer;
         private readonly IGitService _gitService = gitService;
+        private static readonly Dictionary<string, List<VariableMatch>> _repoCache = new();
 
         [HttpGet("repo")]
-        public async Task<IActionResult> AnalyzeAll([FromQuery]RepoRequest request)
+        public async Task<IActionResult> AnalyzeAll([FromQuery] RepoRequest request)
         {
             string repoPath = "";
-            try
+            if (!_repoCache.ContainsKey(repoPath))
             {
                 repoPath = await _gitService.CloneRepoAsync(request);
                 var results = await _analyzer.AnalyzeDirectoryAsync(repoPath, request.Extensions!);
-                var pagedResults = results
-                    .Skip((request.PageNumber - 1) * request.PageSize)
-                    .Take(request.PageSize)
-                    .ToList();
-
-                var paginated = new PaginatedResult<VariableMatch>
-                {
-                    PageNumber = request.PageNumber,
-                    PageSize = request.PageSize,
-                    TotalCount = results.Count,
-                    Items = pagedResults
-                };
-
-                return Ok(paginated);
+                _repoCache[repoPath] = results;
             }
-            finally
+
+            var all = _repoCache[repoPath];
+            var pagedResults = all
+                .Skip((request.PageNumber - 1) * request.PageSize)
+                .Take(request.PageSize)
+                .ToList();
+
+            var paginated = new PaginatedResult<VariableMatch>
             {
-                TryForceDelete(repoPath);
-            }
+                PageNumber = request.PageNumber,
+                PageSize = request.PageSize,
+                TotalCount = all.Count,
+                Items = pagedResults
+            };
+
+            return Ok(paginated);
         }
 
         private static void TryForceDelete(string path)

@@ -1,8 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { AnalyzerComponent } from './analyzer';
+import { AnalyzerComponent } from './analyzer.component';
 
-describe('Analyzer', () => {
+describe('AnalyzerComponent', () => {
   let component: AnalyzerComponent;
   let fixture: ComponentFixture<AnalyzerComponent>;
 
