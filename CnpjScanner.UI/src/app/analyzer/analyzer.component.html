@@ -55,9 +55,16 @@
           </div>
         </div>
         <div class="d-grid">
-          <button type="submit" class="btn btn-primary">Analisar</button>
+          <button type="submit" class="btn btn-primary" [disabled]="loading">
+            Analisar
+          </button>
         </div>
       </form>
+      <div *ngIf="loading" class="text-center mt-3">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Analisando...</span>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -123,7 +130,9 @@
         [boundaryLinks]="true"
         [ellipses]="true"
       />
-      <p class="text-muted mt-2">Total de items: {{ filteredResults.length }}</p>
+      <p class="text-muted mt-2">
+        Total de items: {{ filteredResults.length }}
+      </p>
       <div>
         <button class="btn btn-success me-2" (click)="exportToExcel()">
           Exportar para Excel

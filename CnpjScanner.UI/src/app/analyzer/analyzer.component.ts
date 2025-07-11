@@ -36,6 +36,7 @@ export class AnalyzerComponent {
   selectedType: string = '';
   availableTypes: string[] = [];
   filteredResults: RepoInfo[] = [];
+  loading = false;
 
   isSelected(row: RepoInfo): boolean {
     return this.selectedRows.some(
@@ -141,6 +142,7 @@ export class AnalyzerComponent {
     event.preventDefault();
     this.analyzed = false;
     this.loadPage(this.page);
+    this.loading = true;
     this.repoName = this.repoUrl.split('/').pop()?.replace('.git', '') ?? '';
   }
 
@@ -162,8 +164,8 @@ export class AnalyzerComponent {
           this.analyzed = true;
           const typesSet = new Set(data.map((item) => item.type));
           this.availableTypes = Array.from(typesSet);
-          this.filterByType(); // Apply filter on initial load
-          console.log(this.results);
+          this.filterByType(); 
+          this.loading = false;
         },
         error: (err) => {
           console.error('Error fetching analysis results:', err);
