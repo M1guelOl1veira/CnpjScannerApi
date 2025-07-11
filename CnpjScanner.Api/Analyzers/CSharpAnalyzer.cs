@@ -10,7 +10,7 @@ namespace CnpjScanner.Api.Analyzers
     public class CSharpAnalyzer
     {
         private static readonly Regex CnpjRegex = new(@"\d{2}\.??\d{3}\.??\d{3}/??\d{4}-??\d{2}", RegexOptions.Compiled);
-        private static readonly string[] CnpjKeywords = new[] { "cnpj", "tax" };
+        private static readonly string[] CnpjKeywords = new[] { "cnpj" };
 
         public async Task<List<VariableMatch>> AnalyzeCSharpFilesAsync(string rootPath)
         {

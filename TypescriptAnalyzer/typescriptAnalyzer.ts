@@ -11,7 +11,7 @@ interface VariableMatch {
 }
 
 const CNPJ_REGEX = /\d{2}\.?\d{3}\.?\d{3}\/\d{4}-\d{2}/;
-const KEYWORDS = ['cnpj', 'tax'];
+const KEYWORDS = ['cnpj'];
 const IGNORED_DIRS = ['node_modules', '.angular', '.vscode'];
 
 export function analyzeTypeScriptProject(rootDir: string): VariableMatch[] {

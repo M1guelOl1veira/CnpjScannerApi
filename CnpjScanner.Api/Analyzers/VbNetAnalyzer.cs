@@ -9,7 +9,7 @@ namespace CnpjScanner.Api.Analyzers
     public class VBNetAnalyzer
     {
         private static readonly Regex CnpjRegex = new(@"\d{2}\.??\d{3}\.??\d{3}/??\d{4}-??\d{2}", RegexOptions.Compiled);
-        private static readonly string[] Keywords = ["cnpj", "tax"];
+        private static readonly string[] Keywords = ["cnpj"];
 
         public async Task<List<VariableMatch>> AnalyzeDirectoryAsync(string rootPath)
         {
