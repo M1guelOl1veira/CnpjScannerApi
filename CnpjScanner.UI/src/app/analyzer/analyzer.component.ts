@@ -25,19 +25,17 @@ export class AnalyzerComponent {
     { label: 'TypeScript', value: 'ts' },
   ];
   selectedLanguages: string[] = [];
-  results: Pagination<RepoInfo> = {
-    pageNumber: 1,
-    pageSize: 10,
-    totalCount: 0,
-    items: [],
-  };
+  results: RepoInfo[] = []
   page = 1;
-  pageSize = 16;
+  pageSize = 15;
   analyzed = false;
   exportSaved = false;
   existingWorkbook: XLSX.WorkBook | null = null;
   selectedRows: RepoInfo[] = [];
   repoName = '';
+  selectedType: string = '';
+  availableTypes: string[] = [];
+  filteredResults: RepoInfo[] = [];
 
   isSelected(row: RepoInfo): boolean {
     return this.selectedRows.some(
@@ -66,7 +64,9 @@ export class AnalyzerComponent {
     const fileName = 'cnpj-scanner.xlsx';
 
     const newData = this.selectedRows.map((row) => ({
-      'Descrição Detalhada': `${this.getShortPath(row.filePath)} - ${row.type} - Line ${row.lineNumber}: ${row.declaration}`,
+      'Descrição Detalhada': `${this.getShortPath(row.filePath)} - ${
+        row.type
+      } - Line ${row.lineNumber}: ${row.declaration}`,
       Objeto: this.repoName,
     }));
 
@@ -148,21 +148,21 @@ export class AnalyzerComponent {
     let params = new HttpParams()
       .set('repoUrl', this.repoUrl)
       .set('dirToClone', this.dirToClone)
-      .set('pageNumber', page.toString())
-      .set('pageSize', this.pageSize.toString());
     this.selectedLanguages.forEach((ext) => {
       params = params.append('extensions', ext);
     });
 
     this.http
-      .get<Pagination<RepoInfo>>('https://localhost:7109/api/analyze/repo', {
+      .get<RepoInfo[]>('https://localhost:7109/api/analyze/repo', {
         params,
       })
       .subscribe({
         next: (data) => {
           this.results = data;
-          this.page = data.pageNumber;
           this.analyzed = true;
+          const typesSet = new Set(data.map((item) => item.type));
+          this.availableTypes = Array.from(typesSet);
+          this.filterByType(); // Apply filter on initial load
           console.log(this.results);
         },
         error: (err) => {
@@ -172,6 +172,18 @@ export class AnalyzerComponent {
       });
   }
 
+  filterByType(): void {
+    const allItems = this.results;
+    this.page = 1
+    if (this.selectedType) {
+      this.filteredResults = allItems.filter(
+        (item) => item.type === this.selectedType
+      );
+    } else {
+      this.filteredResults = allItems;
+    }
+  }
+
   goBack() {
     console.log(this.analyzed);
     this.analyzed = !this.analyzed;
@@ -179,11 +191,15 @@ export class AnalyzerComponent {
 
   paginatedResults(): RepoInfo[] {
     const start = (this.page - 1) * this.pageSize;
-    return this.results.items.slice(start, start + this.pageSize);
+    const end = start + this.pageSize;
+    return this.filteredResults.slice(start, end);
+  }
+  onPageChange(pageNumber: number) {
+    this.page = pageNumber;
   }
 
   getShortPath(fullPath: string): string {
-    const normalizedPath = fullPath.replace(/\\/g, '/'); // Normalize slashes
+    const normalizedPath = fullPath.replace(/\\/g, '/');
     const prefix = `${this.dirToClone.replace(/\\/g, '/')}/${this.repoName}`;
     return normalizedPath.startsWith(prefix)
       ? normalizedPath.replace(prefix + '/', '')

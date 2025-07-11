@@ -24,21 +24,7 @@ namespace CnpjScanner.Api.Controllers
                 _repoCache[repoPath] = results;
             }
 
-            var all = _repoCache[repoPath];
-            var pagedResults = all
-                .Skip((request.PageNumber - 1) * request.PageSize)
-                .Take(request.PageSize)
-                .ToList();
-
-            var paginated = new PaginatedResult<VariableMatch>
-            {
-                PageNumber = request.PageNumber,
-                PageSize = request.PageSize,
-                TotalCount = all.Count,
-                Items = pagedResults
-            };
-
-            return Ok(paginated);
+            return Ok(_repoCache[repoPath]);
         }
 
         private static void TryForceDelete(string path)

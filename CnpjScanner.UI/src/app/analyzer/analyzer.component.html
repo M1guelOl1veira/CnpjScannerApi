@@ -63,20 +63,24 @@
 
   <div class="mt-4" *ngIf="analyzed">
     <div class="d-flex justify-content-between align-items-center my-3">
-      <div>
+      <div class=" mb-3">
         <button type="submit" class="btn btn-primary" (click)="goBack()">
           Voltar
         </button>
       </div>
-      <div>
-        <button class="btn btn-success me-2" (click)="exportToExcel()">
-          Exportar para Excel
-        </button>
-        <input
-          type="file"
-          (change)="onFileSelected($event)"
-          accept=".xlsx, .xls"
-        />
+      <div class="form-group mb-3">
+        <label for="typeFilter" class="form-label">Filtrar pelo Tipo:</label>
+        <select
+          id="typeFilter"
+          class="form-select w-auto d-inline-block ms-2"
+          [(ngModel)]="selectedType"
+          (change)="filterByType()"
+        >
+          <option value="">Todos</option>
+          <option *ngFor="let type of availableTypes" [value]="type">
+            {{ type }}
+          </option>
+        </select>
       </div>
     </div>
     <table class="table table-striped">
@@ -91,7 +95,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let match of results.items">
+        <tr *ngFor="let match of paginatedResults()">
           <td>
             <input
               type="checkbox"
@@ -109,15 +113,27 @@
         </tr>
       </tbody>
     </table>
-
-    <ngb-pagination
-      [collectionSize]="results.totalCount"
-      [(page)]="results.pageNumber"
-      [pageSize]="results.pageSize"
-      [boundaryLinks]="true"
-      (pageChange)="loadPage($event)"
-    />
+    <div class="d-flex justify-content-between align-items-center my-3">
+      <ngb-pagination
+        [collectionSize]="results.length"
+        [(page)]="page"
+        [pageSize]="pageSize"
+        (pageChange)="onPageChange($event)"
+        [maxSize]="5"
+        [boundaryLinks]="true"
+        [ellipses]="true"
+      />
+      <div>
+        <button class="btn btn-success me-2" (click)="exportToExcel()">
+          Exportar para Excel
+        </button>
+        <input
+          type="file"
+          (change)="onFileSelected($event)"
+          accept=".xlsx, .xls"
+        />
+      </div>
+    </div>
   </div>
-
-  <div *ngIf="!results.items.length && analyzed">No matches found.</div>
+  <div *ngIf="!results.length && analyzed">Nenhum dado encontrado.</div>
 </div>
