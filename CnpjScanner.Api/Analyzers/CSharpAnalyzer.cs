@@ -10,8 +10,13 @@ namespace CnpjScanner.Api.Analyzers
     public class CSharpAnalyzer
     {
         private static readonly Regex CnpjRegex = new(@"\d{2}\.??\d{3}\.??\d{3}/??\d{4}-??\d{2}", RegexOptions.Compiled);
-        private static readonly string[] CnpjKeywords = new[] { "cnpj" };
+        private static readonly string[] CnpjKeywords = ["cnpj"];
+        private readonly List<string> _types;
 
+        public CSharpAnalyzer()
+        {
+            _types = ["System.Int32", "System.Int64", "System.Int16", "int", "long", "string"];
+        }
         public async Task<List<VariableMatch>> AnalyzeCSharpFilesAsync(string rootPath)
         {
             var matches = new List<VariableMatch>();
@@ -58,7 +63,7 @@ namespace CnpjScanner.Api.Analyzers
                         var inferredType = initializerType?.ToDisplayString() ?? declaredType?.ToDisplayString();
                         bool looksLikeCnpj = CnpjRegex.IsMatch(rawValue ?? "") || CnpjKeywords.Any(k => variableName.Contains(k));
 
-                        if (inferredType is "System.Int32" or "System.Int64" or "System.Int16" or "int" or "long")
+                        if (_types.Contains(inferredType!))
                         {
                             matches.Add(new VariableMatch
                             {
@@ -94,7 +99,7 @@ namespace CnpjScanner.Api.Analyzers
                             var inferredType = initializerType?.ToDisplayString() ?? declaredType?.ToDisplayString();
                             bool looksLikeCnpj = CnpjRegex.IsMatch(rawValue ?? "") || CnpjKeywords.Any(k => variableName.Contains(k));
 
-                            if (inferredType is "System.Int32" or "System.Int64" or "System.Int16")
+                            if (_types.Contains(inferredType!))
                             {
                                 matches.Add(new VariableMatch
                                 {
@@ -140,7 +145,7 @@ namespace CnpjScanner.Api.Analyzers
                     var propName = prop.Identifier.Text.ToLower();
                     bool looksLikeCnpj = CnpjKeywords.Any(k => propName.Contains(k));
 
-                    if (inferredType is "System.Int32" or "System.Int64" or "System.Int16" or "int" or "long")
+                    if (_types.Contains(inferredType!))
                     {
                         matches.Add(new VariableMatch
                         {

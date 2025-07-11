@@ -41,7 +41,7 @@ export function analyzeTypeScriptProject(rootDir: string): VariableMatch[] {
 
       if (kind === SyntaxKind.VariableDeclaration) {
         const declaration = node.asKind(SyntaxKind.VariableDeclaration);
-        if (!declaration || !isDefinitelyNumber(declaration)) return;
+        if (!declaration || !isDefinitelyNumberOrString(declaration)) return;
         const name = declaration.getName();
         const initializer = declaration.getInitializer();
         const lineNumber = declaration.getStartLineNumber();
@@ -60,7 +60,7 @@ export function analyzeTypeScriptProject(rootDir: string): VariableMatch[] {
 
       if (kind === SyntaxKind.PropertyDeclaration) {
         const prop = node.asKind(SyntaxKind.PropertyDeclaration);
-        if (!prop || !isDefinitelyNumber(prop)) return;
+        if (!prop || !isDefinitelyNumberOrString(prop)) return;
         const name = prop.getName();
         const valueText = prop.getInitializer()?.getText() || '';
         const lineNumber = prop.getStartLineNumber();
@@ -182,12 +182,12 @@ function isCnpjLike(name: string, value: string = ''): boolean {
   return CNPJ_REGEX.test(value) || KEYWORDS.some((k) => name.toLowerCase().includes(k));
 }
 
-function isDefinitelyNumber(node: Node): boolean {
+function isDefinitelyNumberOrString(node: Node): boolean {
   const typeNode = (node as any).getTypeNode?.();
   const initializer = (node as any).getInitializer?.();
 
-  if (typeNode && typeNode.getText() === "number") return true;
-  if (initializer && initializer.getKind() === SyntaxKind.NumericLiteral) return true;
+  if (typeNode && (typeNode.getText() === "number" || typeNode.getText() === "string")) return true;
+  if (initializer && (initializer.getKind() === SyntaxKind.NumericLiteral || initializer.getKind() === SyntaxKind.StringLiteral)) return true;
 
   return false;
 }

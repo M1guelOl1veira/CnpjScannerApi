@@ -50,7 +50,7 @@ namespace CnpjScanner.Api.Analyzers
                 _filePath = filePath;
                 _model = model;
                 _matches = matches;
-                _types = ["Int32", "Int64", "Object"];
+                _types = ["Int32", "Int64", "Object", "String"];
             }
 
             public override void VisitVariableDeclarator(VariableDeclaratorSyntax node)
