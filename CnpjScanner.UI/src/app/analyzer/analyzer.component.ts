@@ -25,7 +25,7 @@ export class AnalyzerComponent {
     { label: 'TypeScript', value: 'ts' },
   ];
   selectedLanguages: string[] = [];
-  results: RepoInfo[] = []
+  results: RepoInfo[] = [];
   page = 1;
   pageSize = 15;
   analyzed = false;
@@ -37,6 +37,7 @@ export class AnalyzerComponent {
   availableTypes: string[] = [];
   filteredResults: RepoInfo[] = [];
   loading = false;
+  lastSelectedIndex: number | null = null;
 
   isSelected(row: RepoInfo): boolean {
     return this.selectedRows.some(
@@ -146,10 +147,35 @@ export class AnalyzerComponent {
     this.repoName = this.repoUrl.split('/').pop()?.replace('.git', '') ?? '';
   }
 
+  areAllSelected(): boolean {
+    return (
+      this.paginatedResults().length > 0 &&
+      this.paginatedResults().every((row) => this.isSelected(row))
+    );
+  }
+
+  toggleSelectAll(event: Event): void {
+    const checked = (event.target as HTMLInputElement).checked;
+    if (checked) {
+      this.paginatedResults().forEach((row) => {
+        if (!this.isSelected(row)) {
+          this.selectedRows.push(row);
+        }
+      });
+    } else {
+      this.selectedRows = this.selectedRows.filter(
+        (row) =>
+          !this.paginatedResults().some(
+            (r) =>
+              r.filePath === row.filePath && r.lineNumber === row.lineNumber
+          )
+      );
+    }
+  }
   loadPage(page: number) {
     let params = new HttpParams()
       .set('repoUrl', this.repoUrl)
-      .set('dirToClone', this.dirToClone)
+      .set('dirToClone', this.dirToClone);
     this.selectedLanguages.forEach((ext) => {
       params = params.append('extensions', ext);
     });
@@ -164,7 +190,7 @@ export class AnalyzerComponent {
           this.analyzed = true;
           const typesSet = new Set(data.map((item) => item.type));
           this.availableTypes = Array.from(typesSet);
-          this.filterByType(); 
+          this.filterByType();
           this.loading = false;
         },
         error: (err) => {
@@ -176,7 +202,7 @@ export class AnalyzerComponent {
 
   filterByType(): void {
     const allItems = this.results;
-    this.page = 1
+    this.page = 1;
     if (this.selectedType) {
       this.filteredResults = allItems.filter(
         (item) => item.type === this.selectedType
@@ -207,4 +233,40 @@ export class AnalyzerComponent {
       ? normalizedPath.replace(prefix + '/', '')
       : fullPath;
   }
+  onCheckboxClick(event: MouseEvent, match: RepoInfo, index: number): void {
+    const input = event.target as HTMLInputElement;
+    const isChecked = input.checked;
+
+    if (event.shiftKey && this.lastSelectedIndex !== null) {
+      const start = Math.min(this.lastSelectedIndex, index);
+      const end = Math.max(this.lastSelectedIndex, index);
+      const rowsInPage = this.paginatedResults();
+
+      for (let i = start; i <= end; i++) {
+        const row = rowsInPage[i];
+        if (isChecked && !this.isSelected(row)) {
+          this.selectedRows.push(row);
+        } else if (!isChecked) {
+          this.selectedRows = this.selectedRows.filter(
+            (r) =>
+              !(r.filePath === row.filePath && r.lineNumber === row.lineNumber)
+          );
+        }
+      }
+    } else {
+      // Normal click
+      if (isChecked) {
+        this.selectedRows.push(match);
+      } else {
+        this.selectedRows = this.selectedRows.filter(
+          (r) =>
+            !(
+              r.filePath === match.filePath && r.lineNumber === match.lineNumber
+            )
+        );
+      }
+    }
+
+    this.lastSelectedIndex = index;
+  } 
 }

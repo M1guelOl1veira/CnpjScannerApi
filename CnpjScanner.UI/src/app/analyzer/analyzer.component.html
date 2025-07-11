@@ -93,7 +93,17 @@
     <table class="table table-striped">
       <thead>
         <tr>
-          <th>Revisado</th>
+          <th>
+            <div class="d-flex">
+              <input
+                type="checkbox"
+                [checked]="areAllSelected()"
+                (change)="toggleSelectAll($event)"
+                class="me-2"
+              />
+              <span>Revisado</span>
+            </div>
+          </th>
           <th>Caminho do Arquivo</th>
           <th>Linha</th>
           <th>Tipagem</th>
@@ -102,12 +112,12 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let match of paginatedResults()">
+        <tr *ngFor="let match of paginatedResults(); let i = index">
           <td>
             <input
               type="checkbox"
               [checked]="isSelected(match)"
-              (change)="onCheckboxToggle(match, $event)"
+              (click)="onCheckboxClick($event, match, i)"
             />
           </td>
           <td>{{ getShortPath(match.filePath) }}</td>
