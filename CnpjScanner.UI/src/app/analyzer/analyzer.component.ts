@@ -1,10 +1,12 @@
 import { NgbPaginationModule } from '@ng-bootstrap/ng-bootstrap';
-import { Component, effect, inject, signal } from '@angular/core';
+import { Component, effect, HostListener, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Pagination } from '../shared/models/pagination';
 import { RepoInfo } from '../shared/models/repoInfo';
+import * as XLSX from 'xlsx';
+import * as FileSaver from 'file-saver';
 
 @Component({
   selector: 'app-analyzer',
@@ -30,8 +32,97 @@ export class AnalyzerComponent {
     items: [],
   };
   page = 1;
-  pageSize = 15;
+  pageSize = 16;
   analyzed = false;
+  exportSaved = false;
+  existingWorkbook: XLSX.WorkBook | null = null;
+  selectedRows: RepoInfo[] = [];
+  repoName = '';
+
+  isSelected(row: RepoInfo): boolean {
+    return this.selectedRows.some(
+      (r) => r.filePath === row.filePath && r.lineNumber === row.lineNumber
+    );
+  }
+
+  onCheckboxToggle(row: RepoInfo, event: Event): void {
+    const checked = (event.target as HTMLInputElement).checked;
+    if (checked) {
+      this.selectedRows.push(row);
+    } else {
+      this.selectedRows = this.selectedRows.filter(
+        (r) => !(r.filePath === row.filePath && r.lineNumber === row.lineNumber)
+      );
+    }
+  }
+  @HostListener('window:beforeunload', ['$event'])
+  unloadNotification($event: any) {
+    if (!this.exportSaved) {
+      $event.preventDefault();
+      $event.returnValue = 'You have unsaved changes!';
+    }
+  }
+  exportToExcel(): void {
+    const fileName = 'cnpj-scanner.xlsx';
+
+    const newData = this.selectedRows.map((row) => ({
+      'Descrição Detalhada': `${this.getShortPath(row.filePath)} - ${row.type} - Line ${row.lineNumber}: ${row.declaration}`,
+      Objeto: this.repoName,
+    }));
+
+    if (this.existingWorkbook) {
+      const sheetName = this.existingWorkbook.SheetNames[0];
+      const existingSheet = this.existingWorkbook.Sheets[sheetName];
+      const existingData: any[] = XLSX.utils.sheet_to_json(existingSheet);
+
+      const existingKeys = new Set(
+        existingData.map((row) => row['Descrição Detalhada'])
+      );
+      const uniqueNewRows = newData.filter(
+        (row) => !existingKeys.has(row['Descrição Detalhada'])
+      );
+
+      const updatedData = [...existingData, ...uniqueNewRows];
+      const newSheet = XLSX.utils.json_to_sheet(updatedData);
+      this.existingWorkbook.Sheets[sheetName] = newSheet;
+
+      const wbout = XLSX.write(this.existingWorkbook, {
+        bookType: 'xlsx',
+        type: 'array',
+      });
+
+      const blob = new Blob([wbout], { type: 'application/octet-stream' });
+      FileSaver.saveAs(blob, fileName);
+    } else {
+      const worksheet = XLSX.utils.json_to_sheet(newData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'CNPJ');
+
+      const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+      const blob = new Blob([wbout], { type: 'application/octet-stream' });
+
+      FileSaver.saveAs(blob, fileName);
+      this.existingWorkbook = workbook;
+    }
+
+    this.exportSaved = true;
+  }
+
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+
+    const file = input.files[0];
+    const reader = new FileReader();
+
+    reader.onload = (e: any) => {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      this.existingWorkbook = workbook;
+    };
+
+    reader.readAsArrayBuffer(file);
+  }
 
   onCheckboxChange(event: any) {
     const value = event.target.value;
@@ -50,35 +141,35 @@ export class AnalyzerComponent {
     event.preventDefault();
     this.analyzed = false;
     this.loadPage(this.page);
+    this.repoName = this.repoUrl.split('/').pop()?.replace('.git', '') ?? '';
   }
 
   loadPage(page: number) {
-    const apiUrl = `https://localhost:7109/api/analyze/repo?repoUrl=${encodeURIComponent(
-      this.repoUrl
-    )}&pageNumber=${page}&pageSize=${this.pageSize}&dirToClone=${
-      this.dirToClone
-    }&extensions=${this.selectedLanguages}`;
     let params = new HttpParams()
-    .set('repoUrl', this.repoUrl)
-    .set('dirToClone', this.dirToClone)
-    .set('pageNumber', page.toString())
-    .set('pageSize', this.pageSize.toString());
+      .set('repoUrl', this.repoUrl)
+      .set('dirToClone', this.dirToClone)
+      .set('pageNumber', page.toString())
+      .set('pageSize', this.pageSize.toString());
     this.selectedLanguages.forEach((ext) => {
       params = params.append('extensions', ext);
     });
 
-    this.http.get<Pagination<RepoInfo>>('https://localhost:7109/api/analyze/repo', { params }).subscribe({
-      next: (data) => {
-        this.results = data;
-        this.page = data.pageNumber;
-        this.analyzed = true;
-        console.log(this.results);
-      },
-      error: (err) => {
-        console.error('Error fetching analysis results:', err);
-        this.analyzed = false;
-      },
-    });
+    this.http
+      .get<Pagination<RepoInfo>>('https://localhost:7109/api/analyze/repo', {
+        params,
+      })
+      .subscribe({
+        next: (data) => {
+          this.results = data;
+          this.page = data.pageNumber;
+          this.analyzed = true;
+          console.log(this.results);
+        },
+        error: (err) => {
+          console.error('Error fetching analysis results:', err);
+          this.analyzed = false;
+        },
+      });
   }
 
   goBack() {
@@ -89,5 +180,13 @@ export class AnalyzerComponent {
   paginatedResults(): RepoInfo[] {
     const start = (this.page - 1) * this.pageSize;
     return this.results.items.slice(start, start + this.pageSize);
+  }
+
+  getShortPath(fullPath: string): string {
+    const normalizedPath = fullPath.replace(/\\/g, '/'); // Normalize slashes
+    const prefix = `${this.dirToClone.replace(/\\/g, '/')}/${this.repoName}`;
+    return normalizedPath.startsWith(prefix)
+      ? normalizedPath.replace(prefix + '/', '')
+      : fullPath;
   }
 }
