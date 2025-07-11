@@ -63,7 +63,7 @@
 
   <div class="mt-4" *ngIf="analyzed">
     <div class="d-flex justify-content-between align-items-center my-3">
-      <div class=" mb-3">
+      <div class="mb-3">
         <button type="submit" class="btn btn-primary" (click)="goBack()">
           Voltar
         </button>
@@ -123,6 +123,7 @@
         [boundaryLinks]="true"
         [ellipses]="true"
       />
+      <p class="text-muted mt-2">Total de items: {{ paginatedResults().length }}</p>
       <div>
         <button class="btn btn-success me-2" (click)="exportToExcel()">
           Exportar para Excel
