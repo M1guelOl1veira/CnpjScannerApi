@@ -8,14 +8,14 @@
 
       <form (submit)="onSubmit($event)">
         <div class="mb-3">
-          <label for="repoUrl" class="form-label">Repositório</label>
+          <label for="repo" class="form-label">Repositório</label>
           <input
             type="text"
-            id="repoUrl"
+            id="repo"
             class="form-control"
             placeholder="hdi-sistemas/br-sns-petregulacao"
-            [(ngModel)]="repoUrl"
-            name="repoUrl"
+            [(ngModel)]="repo"
+            name="repo"
             required
           />
         </div>
@@ -116,7 +116,7 @@
           <td>
             <input
               type="checkbox"
-              [checked]="isSelected(match)"
+              [checked]="isSelected(match) || match.looksLikeCnpj"
               (click)="onCheckboxClick($event, match, i)"
             />
           </td>

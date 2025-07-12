@@ -11,8 +11,9 @@ namespace CnpjScanner.Api.Services
 
         public async Task<string> CloneRepoAsync(RepoRequest request)
         {
-            var repoName = Path.GetFileNameWithoutExtension(request.RepoUrl);
+            var repoName = Path.GetFileNameWithoutExtension(request.Repo);
             var localPath = Path.Combine(request.DirToClone, repoName);
+            var repoUrl = $"https://github.com/{request.Repo}.git";
             if (!Directory.Exists(localPath))
             {
                 var options = new CloneOptions();
@@ -20,11 +21,11 @@ namespace CnpjScanner.Api.Services
                 options.FetchOptions.CredentialsProvider = (_url, _user, _cred) =>
                     new UsernamePasswordCredentials
                     {
-                        Username = "git",   
+                        Username = "git",
                         Password = configuration["Git:Token"]
                     };
 
-                await Task.Run(() => Repository.Clone(request.RepoUrl, localPath, options));
+                await Task.Run(() => Repository.Clone(repoUrl, localPath, options));
             }
             return localPath;
         }

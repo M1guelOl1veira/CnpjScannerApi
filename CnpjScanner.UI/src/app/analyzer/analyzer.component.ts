@@ -17,7 +17,7 @@ import * as FileSaver from 'file-saver';
 })
 export class AnalyzerComponent {
   private http = inject(HttpClient);
-  repoUrl = '';
+  repo = '';
   dirToClone = '';
   languageOptions = [
     { label: 'C#', value: 'cs' },
@@ -66,10 +66,14 @@ export class AnalyzerComponent {
     const fileName = 'cnpj-scanner.xlsx';
 
     const newData = this.selectedRows.map((row) => ({
-      'Descrição Detalhada': `${this.getShortPath(row.filePath)} - ${
+      'Descrição Completa': `${row.filePath} - ${
         row.type
       } - Line ${row.lineNumber}: ${row.declaration}`,
       Objeto: this.repoName,
+      Tipo: row.type,
+      Linha: row.lineNumber,
+      'Caminho do Arquivo': row.filePath,
+      'Declaração': row.declaration
     }));
 
     if (this.existingWorkbook) {
@@ -78,10 +82,10 @@ export class AnalyzerComponent {
       const existingData: any[] = XLSX.utils.sheet_to_json(existingSheet);
 
       const existingKeys = new Set(
-        existingData.map((row) => row['Descrição Detalhada'])
+        existingData.map((row) => row['Descrição Completa'])
       );
       const uniqueNewRows = newData.filter(
-        (row) => !existingKeys.has(row['Descrição Detalhada'])
+        (row) => !existingKeys.has(row['Descrição Completa'])
       );
 
       const updatedData = [...existingData, ...uniqueNewRows];
@@ -144,7 +148,7 @@ export class AnalyzerComponent {
     this.analyzed = false;
     this.loadPage(this.page);
     this.loading = true;
-    this.repoName = this.repoUrl.split('/').pop()?.replace('.git', '') ?? '';
+    this.repoName = this.repo.split('/').pop()?.replace('.git', '') ?? '';
   }
 
   areAllSelected(): boolean {
@@ -174,7 +178,7 @@ export class AnalyzerComponent {
   }
   loadPage(page: number) {
     let params = new HttpParams()
-      .set('repoUrl', this.repoUrl)
+      .set('repo', this.repo)
       .set('dirToClone', this.dirToClone);
     this.selectedLanguages.forEach((ext) => {
       params = params.append('extensions', ext);
@@ -186,7 +190,14 @@ export class AnalyzerComponent {
       })
       .subscribe({
         next: (data) => {
+              data = data.map(item => ({
+            ...item,
+            filePath: this.getShortPath(item.filePath)
+          }));
           this.results = data;
+          this.selectedRows.push(
+            ...data.filter(r => r.looksLikeCnpj && !this.selectedRows.some(s => s.filePath === r.filePath && s.lineNumber === r.lineNumber))
+          );
           this.analyzed = true;
           const typesSet = new Set(data.map((item) => item.type));
           this.availableTypes = Array.from(typesSet);
@@ -196,6 +207,7 @@ export class AnalyzerComponent {
         error: (err) => {
           console.error('Error fetching analysis results:', err);
           this.analyzed = false;
+          this.loading = false;
         },
       });
   }

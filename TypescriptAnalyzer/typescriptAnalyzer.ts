@@ -40,14 +40,15 @@ export function analyzeTypeScriptProject(rootDir: string): VariableMatch[] {
       let match: VariableMatch | null = null;
 
       if (kind === SyntaxKind.VariableDeclaration) {
-        const declaration = node.asKind(SyntaxKind.VariableDeclaration);
-        if (!declaration || !isDefinitelyNumberOrString(declaration)) return;
+        const declaration = node.asKindOrThrow(SyntaxKind.VariableDeclaration);
         const name = declaration.getName();
         const initializer = declaration.getInitializer();
         const lineNumber = declaration.getStartLineNumber();
         const valueText = initializer?.getText() || '';
         const looksLikeCnpj = isCnpjLike(name, valueText);
         const type = declaration.getType().getText();
+
+        if (!["string", "number"].includes(type)) return;
 
         match = {
           filePath: sourceFile.getFilePath(),
@@ -59,13 +60,15 @@ export function analyzeTypeScriptProject(rootDir: string): VariableMatch[] {
       }
 
       if (kind === SyntaxKind.PropertyDeclaration) {
-        const prop = node.asKind(SyntaxKind.PropertyDeclaration);
-        if (!prop || !isDefinitelyNumberOrString(prop)) return;
+        const prop = node.asKindOrThrow(SyntaxKind.PropertyDeclaration);
         const name = prop.getName();
-        const valueText = prop.getInitializer()?.getText() || '';
+        const initializer = prop.getInitializer();
+        const valueText = initializer?.getText() || '';
         const lineNumber = prop.getStartLineNumber();
-        const looksLikeCnpj = isCnpjLike(name, valueText);
         const type = prop.getType().getText();
+        const looksLikeCnpj = isCnpjLike(name, valueText);
+
+        if (!["string", "number"].includes(type)) return;
 
         match = {
           filePath: sourceFile.getFilePath(),
@@ -78,7 +81,8 @@ export function analyzeTypeScriptProject(rootDir: string): VariableMatch[] {
 
       if (kind === SyntaxKind.GetAccessor) {
         const getter = node.asKind(SyntaxKind.GetAccessor);
-        if (!getter || getter.getReturnType().getText() !== 'number') return;
+        const returnType = getter?.getReturnType().getText();
+        if (!getter || (returnType !== 'number' && returnType !== 'string')) return;
         const name = getter.getName();
         const lineNumber = getter.getStartLineNumber();
         const looksLikeCnpj = isCnpjLike(name);
@@ -95,7 +99,8 @@ export function analyzeTypeScriptProject(rootDir: string): VariableMatch[] {
 
       if (kind === SyntaxKind.PropertySignature) {
         const prop = node.asKind(SyntaxKind.PropertySignature);
-        if (!prop || prop.getType().getText() !== 'number') return;
+        const propType = prop?.getType().getText();
+        if (!prop || (propType !== 'number' && propType !== 'string')) return;
         const name = prop.getName();
         const lineNumber = prop.getStartLineNumber();
         const looksLikeCnpj = isCnpjLike(name);
@@ -113,24 +118,30 @@ export function analyzeTypeScriptProject(rootDir: string): VariableMatch[] {
       if (kind === SyntaxKind.EnumMember) {
         const member = node.asKind(SyntaxKind.EnumMember);
         const initializer = member?.getInitializer();
-        if (!member || !initializer || initializer.getKind() !== SyntaxKind.NumericLiteral) return;
+
+        if (!member || !initializer) return;
+
+        const kind = initializer.getKind();
+        if (kind !== SyntaxKind.NumericLiteral && kind !== SyntaxKind.StringLiteral) return;
+
         const name = member.getName();
         const valueText = initializer.getText();
         const lineNumber = member.getStartLineNumber();
         const looksLikeCnpj = isCnpjLike(name, valueText);
-
+        const type = kind === SyntaxKind.StringLiteral ? 'string' : 'number';
         match = {
           filePath: sourceFile.getFilePath(),
           lineNumber,
           declaration: member.getText(),
           looksLikeCnpj,
-          type: 'number'
+          type: type
         };
       }
 
       if (kind === SyntaxKind.Parameter) {
         const param = node.asKind(SyntaxKind.Parameter);
-        if (!param || param.getType()?.getText() !== 'number') return;
+        const paramType = param?.getType()?.getText() || '';
+        if (!param || (paramType !== 'number' && paramType !== 'string')) return;
         const name = param.getName();
         const lineNumber = param.getStartLineNumber();
         const looksLikeCnpj = isCnpjLike(name);
@@ -180,16 +191,6 @@ function getAllFiles(dir: string, ext: string, files: string[] = []): string[] {
 
 function isCnpjLike(name: string, value: string = ''): boolean {
   return CNPJ_REGEX.test(value) || KEYWORDS.some((k) => name.toLowerCase().includes(k));
-}
-
-function isDefinitelyNumberOrString(node: Node): boolean {
-  const typeNode = (node as any).getTypeNode?.();
-  const initializer = (node as any).getInitializer?.();
-
-  if (typeNode && (typeNode.getText() === "number" || typeNode.getText() === "string")) return true;
-  if (initializer && (initializer.getKind() === SyntaxKind.NumericLiteral || initializer.getKind() === SyntaxKind.StringLiteral)) return true;
-
-  return false;
 }
 
 if (require.main === module) {

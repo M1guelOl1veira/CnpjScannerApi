@@ -44,7 +44,7 @@ namespace CnpjScanner.Api.Services
                 Declaration = match.Declaration,
                 LooksLikeCnpj = match.LooksLikeCnpj,
                 Language = "TypeScript",
-                Type = "number"
+                Type = match.Type
             }).ToList();
         }
     }
