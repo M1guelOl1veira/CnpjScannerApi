@@ -11,20 +11,14 @@ namespace CnpjScanner.Api.Controllers
     {
         private readonly MultiLanguageAnalyzerService _analyzer = analyzer;
         private readonly IGitService _gitService = gitService;
-        private static readonly Dictionary<string, List<VariableMatch>> _repoCache = new();
 
         [HttpGet("repo")]
         public async Task<IActionResult> AnalyzeAll([FromQuery] RepoRequest request)
         {
-            string repoPath = "";
-            if (!_repoCache.ContainsKey(repoPath))
-            {
-                repoPath = await _gitService.CloneRepoAsync(request);
-                var results = await _analyzer.AnalyzeDirectoryAsync(repoPath, request.Extensions!);
-                _repoCache[repoPath] = results;
-            }
+            string repoPath = await _gitService.CloneRepoAsync(request);
+            var results = await _analyzer.AnalyzeDirectoryAsync(repoPath, request.Extensions!);
 
-            return Ok(_repoCache[repoPath]);
+            return Ok(results);
         }
 
         private static void TryForceDelete(string path)
