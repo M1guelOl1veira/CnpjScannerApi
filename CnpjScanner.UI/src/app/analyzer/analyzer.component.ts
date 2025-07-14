@@ -240,7 +240,7 @@ export class AnalyzerComponent {
 
   getShortPath(fullPath: string): string {
     const normalizedPath = fullPath.replace(/\\/g, '/');
-    const prefix = `${this.dirToClone.replace(/\\/g, '/')}/${this.repoName}`;
+    const prefix = `${this.dirToClone.replace(/\\/g, '/')}/${this.repo}`;
     return normalizedPath.startsWith(prefix)
       ? normalizedPath.replace(prefix + '/', '')
       : fullPath;
