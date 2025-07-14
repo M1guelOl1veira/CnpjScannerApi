@@ -11,8 +11,7 @@ namespace CnpjScanner.Api.Services
 
         public async Task<string> CloneRepoAsync(RepoRequest request)
         {
-            var repoName = Path.GetFileNameWithoutExtension(request.Repo);
-            var localPath = Path.Combine(request.DirToClone, repoName);
+            var localPath = Path.Combine(request.DirToClone, request.Repo);
             var repoUrl = $"https://github.com/{request.Repo}.git";
             if (!Directory.Exists(localPath))
             {
