@@ -146,9 +146,9 @@ export class AnalyzerComponent {
   onSubmit(event: Event) {
     event.preventDefault();
     this.analyzed = false;
+    this.repoName = this.repo.split('/').pop()?.replace('.git', '') ?? '';
     this.loadPage(this.page);
     this.loading = true;
-    this.repoName = this.repo.split('/').pop()?.replace('.git', '') ?? '';
   }
 
   areAllSelected(): boolean {
