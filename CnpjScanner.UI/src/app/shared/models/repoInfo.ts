@@ -5,4 +5,5 @@ export type RepoInfo = {
     lineNumber: number;
     looksLikeCnpj: boolean;
     type: string;
+    repoName: string;
 }

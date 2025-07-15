@@ -67,7 +67,7 @@ export class AnalyzerComponent {
 
     const newData = this.selectedRows.map((row) => ({
       'Descrição Completa': `${row.filePath} - ${row.type} - Line ${row.lineNumber}: ${row.declaration}`,
-      Objeto: this.repoName,
+      Objeto: row.repoName,
       Tipo: row.type,
       Linha: row.lineNumber,
       'Caminho do Arquivo': row.filePath,
@@ -191,6 +191,7 @@ export class AnalyzerComponent {
           data = data.map((item) => ({
             ...item,
             filePath: this.getShortPath(item.filePath),
+            repoName: this.repoName
           }));
           this.results = data;
           this.selectedRows.push(
