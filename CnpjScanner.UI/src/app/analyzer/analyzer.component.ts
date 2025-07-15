@@ -22,7 +22,7 @@ export class AnalyzerComponent {
   languageOptions = [
     { label: 'C#', value: 'cs' },
     { label: 'VB.NET', value: 'vb' },
-    { label: 'TypeScript', value: 'ts' },
+    { label: 'TypeScript/Javascript', value: 'ts' },
   ];
   selectedLanguages: string[] = [];
   results: RepoInfo[] = [];
