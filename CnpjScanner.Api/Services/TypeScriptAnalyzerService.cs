@@ -17,7 +17,7 @@ namespace CnpjScanner.Api.Services
                 UseShellExecute = false,
                 CreateNoWindow = true
             };
-            psi.ArgumentList.Add("--max-old-space-size=512");
+            psi.ArgumentList.Add("--max-old-space-size=4096");
             psi.ArgumentList.Add("../TypescriptAnalyzer/dist/typescriptAnalyzer.js");
             psi.ArgumentList.Add(codePath);
             psi.ArgumentList.Add("--quiet");

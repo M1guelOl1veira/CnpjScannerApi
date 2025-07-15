@@ -35,6 +35,7 @@ export class AnalyzerComponent {
   repoName = '';
   selectedType: string = '';
   availableTypes: string[] = [];
+  declarationFilter = '';
   filteredResults: RepoInfo[] = [];
   loading = false;
   lastSelectedIndex: number | null = null;
@@ -191,7 +192,7 @@ export class AnalyzerComponent {
           data = data.map((item) => ({
             ...item,
             filePath: this.getShortPath(item.filePath),
-            repoName: this.repoName
+            repoName: this.repoName,
           }));
           this.results = data;
           this.selectedRows.push(
@@ -209,6 +210,7 @@ export class AnalyzerComponent {
           this.availableTypes = Array.from(typesSet);
           this.filterByType();
           this.loading = false;
+          this.applyFilter();
         },
         error: (err) => {
           console.error('Error fetching analysis results:', err);
@@ -216,6 +218,17 @@ export class AnalyzerComponent {
           this.loading = false;
         },
       });
+  }
+  applyFilter(): void {
+    const filterText = this.declarationFilter.trim().toLowerCase();
+
+    if (filterText === '') {
+      this.filteredResults = this.results;
+    } else {
+      this.filteredResults = this.results.filter((item) =>
+        item.declaration.toLowerCase().includes(filterText)
+      );
+    }
   }
 
   filterByType(): void {
@@ -246,8 +259,14 @@ export class AnalyzerComponent {
 
   getShortPath(filePath: string): string {
     const normalizedFilePath = filePath.replace(/\\/g, '/').replace('//', '/');
-    const normalizedDir = this.dirToClone.replace(/\\/g, '/').replace(/\/+$/, '').replace('//', '/');
-    return normalizedFilePath.replace(normalizedDir + '/' + this.repo.split('/')[0] + '/', '')
+    const normalizedDir = this.dirToClone
+      .replace(/\\/g, '/')
+      .replace(/\/+$/, '')
+      .replace('//', '/');
+    return normalizedFilePath.replace(
+      normalizedDir + '/' + this.repo.split('/')[0] + '/',
+      ''
+    );
   }
   onCheckboxClick(event: MouseEvent, match: RepoInfo, index: number): void {
     const input = event.target as HTMLInputElement;
