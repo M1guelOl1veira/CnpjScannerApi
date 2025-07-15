@@ -120,11 +120,25 @@
               (click)="onCheckboxClick($event, match, i)"
             />
           </td>
-          <td>{{ getShortPath(match.filePath) }}</td>
+          <td style="max-width: 400px">
+            <div
+              class="text-truncate"
+              style="overflow: hidden; white-space: nowrap"
+              title="{{ getShortPath(match.filePath) }}"
+            >
+              {{ getShortPath(match.filePath) }}
+            </div>
+          </td>
           <td>{{ match.lineNumber }}</td>
           <td>{{ match.type }}</td>
-          <td>
-            <code>{{ match.declaration }}</code>
+          <td style="max-width: 400px">
+            <div
+              class="text-truncate"
+              style="overflow: hidden; white-space: nowrap"
+              title="{{ match.declaration }}"
+            >
+              <code>{{ match.declaration }}</code>
+            </div>
           </td>
           <td>{{ match.looksLikeCnpj ? "✅" : "❌" }}</td>
         </tr>

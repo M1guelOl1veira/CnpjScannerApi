@@ -66,14 +66,12 @@ export class AnalyzerComponent {
     const fileName = 'cnpj-scanner.xlsx';
 
     const newData = this.selectedRows.map((row) => ({
-      'Descrição Completa': `${row.filePath} - ${
-        row.type
-      } - Line ${row.lineNumber}: ${row.declaration}`,
+      'Descrição Completa': `${row.filePath} - ${row.type} - Line ${row.lineNumber}: ${row.declaration}`,
       Objeto: this.repoName,
       Tipo: row.type,
       Linha: row.lineNumber,
       'Caminho do Arquivo': row.filePath,
-      'Declaração': row.declaration
+      Declaração: row.declaration,
     }));
 
     if (this.existingWorkbook) {
@@ -190,13 +188,20 @@ export class AnalyzerComponent {
       })
       .subscribe({
         next: (data) => {
-              data = data.map(item => ({
+          data = data.map((item) => ({
             ...item,
-            filePath: this.getShortPath(item.filePath)
+            filePath: this.getShortPath(item.filePath),
           }));
           this.results = data;
           this.selectedRows.push(
-            ...data.filter(r => r.looksLikeCnpj && !this.selectedRows.some(s => s.filePath === r.filePath && s.lineNumber === r.lineNumber))
+            ...data.filter(
+              (r) =>
+                r.looksLikeCnpj &&
+                !this.selectedRows.some(
+                  (s) =>
+                    s.filePath === r.filePath && s.lineNumber === r.lineNumber
+                )
+            )
           );
           this.analyzed = true;
           const typesSet = new Set(data.map((item) => item.type));
@@ -238,12 +243,10 @@ export class AnalyzerComponent {
     this.page = pageNumber;
   }
 
-  getShortPath(fullPath: string): string {
-    const normalizedPath = fullPath.replace(/\\/g, '/');
-    const prefix = `${this.dirToClone.replace(/\\/g, '/')}/${this.repo}`;
-    return normalizedPath.startsWith(prefix)
-      ? normalizedPath.replace(prefix + '/', '')
-      : fullPath;
+  getShortPath(filePath: string): string {
+    const normalizedFilePath = filePath.replace(/\\/g, '/').replace('//', '/');
+    const normalizedDir = this.dirToClone.replace(/\\/g, '/').replace(/\/+$/, '').replace('//', '/');
+    return normalizedFilePath.replace(normalizedDir + '/' + this.repo.split('/')[0] + '/', '')
   }
   onCheckboxClick(event: MouseEvent, match: RepoInfo, index: number): void {
     const input = event.target as HTMLInputElement;
@@ -280,5 +283,5 @@ export class AnalyzerComponent {
     }
 
     this.lastSelectedIndex = index;
-  } 
+  }
 }
